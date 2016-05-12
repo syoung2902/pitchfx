@@ -1,0 +1,109 @@
+SELECT AVG(outertable.dis) AS disaverage, outertable.yr, outertable.pitcher, outertable.pitch_type, 
+outertable.game_id, 
+outertable.war, outertable.gs, games2.temp, games2.local_time, rsgames2.ATTEND_PARK_CT, rsgames2.START_GAME_TM, 
+
+rsgames2.GAME_DY, rsgames2.DAYNIGHT_PARK_CD, rsgames2.PRECIP_PARK_CD, rsgames2.WIND_SPEED_PARK_CT, 
+teamdata.LNPop, 
+teamdata.IncomePC, teamdata.CPI, teamdata.PPMult, teamdata.NewStadium, teamdata.Roof, teamdata.FCI 
+FROM 
+
+
+(
+
+SELECT distinct sqrt(((abs((power(pitches.px-myavgtable.apx,2))+power(pitches.pz-myavgtable.apz,2))))) AS dis, 
+games2.game_id AS game_id, 
+pitches.pitch_id AS pitch_id, myavgtable.yr, atbats.pitcher AS pitcher, myavgtable.pitch_type, 
+myavgtable.war, myavgtable.gs
+
+FROM 
+
+
+(
+
+SELECT DISTINCT atbats.pitcher AS pitcherid, YEAR(games2.DATE) AS yr, pitches.pitch_type AS pitch_type, 
+
+AVG(pitches.px) AS apx, AVG(pitches.pz) AS apz, pitcherwar.WAR AS war, pitcherwar.GS AS gs
+
+
+FROM 
+atbats 
+JOIN pitches
+
+
+ON pitches.ab_id = atbats.ab_id
+
+
+JOIN games2
+
+
+ON atbats.game_id = games2.game_id
+
+
+JOIN pitcherwar
+
+
+ON atbats.pitcher = pitcherwar.eliasid
+
+
+AND pitcherwar.year = YEAR(games2.DATE)
+
+AND pitches.pitch_type != 'IN'
+
+AND pitches.pitch_type != 'PO'
+
+AND pitches.pitch_type != 'UN'
+
+AND YEAR(games2.DATE)>=2008
+
+
+
+GROUP BY atbats.pitcher, pitches.pitch_type, yr
+
+) 
+
+AS myavgtable
+
+JOIN atbats
+
+ON atbats.pitcher = myavgtable.pitcherid
+
+JOIN pitches
+
+ON pitches.ab_id = atbats.ab_id
+
+JOIN games2
+
+ON games2.game_id = atbats.game_id
+
+AND myavgtable.pitch_type=pitches.pitch_type
+
+AND YEAR(games2.DATE) = myavgtable.yr
+
+) 
+
+AS outertable
+
+JOIN games2
+
+ON games2.game_id = outertable.game_id 
+
+JOIN rsgames2 
+on outertable.game_id = rsgames2.game_id
+
+JOIN teamdata
+
+ON games2.HOME = teamdata.Team
+
+AND outertable.yr = teamdata.Year
+
+AND games2.HOME != 'TOR'
+
+AND outertable.yr != '2007'
+
+
+WHERE outertable.dis IS NOT NULL
+
+AND outertable.pitcher = games2.starter
+
+
+GROUP BY outertable.game_id, outertable.pitcher, outertable.pitch_type;
