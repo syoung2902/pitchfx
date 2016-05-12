@@ -1,5 +1,5 @@
 # pitchfx
-Building and modifying a mySQL pitchf/x database for use in my thesis, including queries
+Updating and modifying a mySQL pitchf/x database for use in my thesis, including queries
 
 Begin by downloading the initial database (DB Download)
 
